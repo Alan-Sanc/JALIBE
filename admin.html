@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JALIBE ADMIN</title>
+<style>
+body{font-family:system-ui;background:#0f0f0f;color:#fff;padding:16px}
+.card{background:#1a1a1a;border-radius:16px;padding:16px;margin:12px 0;border:1px solid #333}
+input,button{width:100%;padding:12px;border-radius:8px;border:1px solid #333;background:#262626;color:#fff;margin-top:8px}
+button{background:#facc15;color:#000;font-weight:bold}
+.item{border-bottom:1px solid #333;padding:12px 0}
+img{width:100%;max-height:200px;object-fit:cover;border-radius:8px;margin-top:8px}
+</style>
+</head>
+<body>
+<div id="login" class="card">
+<h2 style="color:#facc15">JALIBE ADMIN</h2>
+<p>Solo Hermanos Sanc</p>
+<input id="pass" type="password" placeholder="Clave de admin">
+<button onclick="entrar()">ENTRAR</button>
+<p style="font-size:11px;color:#888">Clave por defecto: SANC2026</p>
+</div>
+
+<div id="panel" style="display:none">
+<h2 style="color:#facc15">Panel JALIBE - <span id="total"></span> reportes</h2>
+<div style="display:flex;gap:8px">
+<button onclick="exportar()" style="background:#22c55e">📥 EXPORTAR CSV</button>
+<button onclick="borrarTodo()" style="background:#ef4444;color:#fff">🗑️ BORRAR TODO</button>
+</div>
+<div id="lista"></div>
+<button onclick="location.href='index.html'" style="background:#333;color:#fff">← VOLVER A APP</button>
+</div>
+
+<script>
+function entrar(){
+ if(document.getElementById('pass').value==='SANC2026' || document.getElementById('pass').value==='jalibe2026'){
+   document.getElementById('login').style.display='none';
+   document.getElementById('panel').style.display='block';
+   mostrar();
+ } else { alert('Clave incorrecta we'); }
+}
+function mostrar(){
+ let lista=JSON.parse(localStorage.getItem('jalibe_nube_v2')||'[]');
+ document.getElementById('total').textContent=lista.length;
+ let html='';
+ lista.forEach((r,i)=>{
+   html+=`<div class="item"><b style="color:#facc15">${r.tipo}</b> - ${r.lugar}<br><small>${r.fecha} | Anónimo:${r.anonimo}</small><br>${r.desc}${r.foto?'<br><img src="'+r.foto+'">':''}<br><button onclick="borrar(${i})" style="background:#333;color:#fff;padding:6px">Borrar este</button> <button onclick="wa('${r.fecha}')" style="background:#25D366;color:#fff;padding:6px">WhatsApp EHS</button></div>`;
+ });
+ document.getElementById('lista').innerHTML=html||'<p style="color:#888">Aún no hay reportes en este cel</p>';
+}
+function borrar(i){
+ if(!confirm('¿Borrar?')) return;
+ let lista=JSON.parse(localStorage.getItem('jalibe_nube_v2')||'[]'); lista.splice(i,1); localStorage.setItem('jalibe_nube_v2',JSON.stringify(lista)); mostrar();
+}
+function borrarTodo(){
+ if(!confirm('¿Borrar TODA la nube local?')) return;
+ localStorage.removeItem('jalibe_nube_v2'); mostrar();
+}
+function wa(fecha){
+ let lista=JSON.parse(localStorage.getItem('jalibe_nube_v2')||'[]'); let r=lista.find(x=>x.fecha==fecha);
+ let txt=`*REPORTE JALIBE ADMIN*%0A${r.tipo} en ${r.lugar}%0A${r.desc}%0A${r.fecha}`;
+ window.open(`https://wa.me/?text=${txt}`,'_blank');
+}
+function exportar(){
+ let lista=JSON.parse(localStorage.getItem('jalibe_nube_v2')||'[]');
+ let csv='Fecha,Tipo,Lugar,Anonimo,Descripcion\n';
+ lista.forEach(r=>{csv+=`"${r.fecha}","${r.tipo}","${r.lugar}","${r.anonimo}","${r.desc.replace(/"/g,'')}"\n`});
+ let blob=new Blob([csv],{type:'text/csv'}); let url=URL.createObjectURL(blob);
+ let a=document.createElement('a'); a.href=url; a.download='reportes_jalibe.csv'; a.click();
+}
+</script>
+</body>
+</html>
